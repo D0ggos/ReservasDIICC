@@ -131,7 +131,7 @@ function actualizarAsientosSeleccionados() {
 
   localStorage.setItem("asientosSeleccionados", JSON.stringify(asientosIndex));
 }
-document.querySelector("reservar").addEventListener("click", () => {
+document.querySelector("#reservar").addEventListener("click", () => {
   const puesto = idAsientoSeleccionado; 
   const fecha_agendamiento = fechaSeleccionada;
 
