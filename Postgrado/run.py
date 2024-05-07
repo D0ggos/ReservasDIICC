@@ -14,6 +14,7 @@ app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta'
 
 usuario = None
+fecha = None
 
 # Crear usuario
 
@@ -24,6 +25,7 @@ usuario = None
     #conexion.commit()
 
 # Crear reserva
+
 def insert_reservation(usuario, puesto, fecha_agendamiento):
     print(usuario, puesto, fecha_agendamiento)
     # Verifica que todos los datos necesarios estén presentes
@@ -70,7 +72,7 @@ def get_reservations(date):
     return jsonify(reservations)
 
 @app.route('/reservations', methods=['POST'])
-def create_reservation():
+def reservations():
 
     if 'username' in session:
         usuario = session['username']
@@ -79,8 +81,9 @@ def create_reservation():
         print(data)
         puesto = data.get('puesto')
         fecha_agendamiento = data.get('fecha_agendamiento')
+        fecha = data.get('fecha')
         insert_reservation(usuario, puesto, fecha_agendamiento)
-        return jsonify({'message': 'Reserva creada correctamente'}), 201
+        return redirect(url_for('confirmacion', usuario=usuario, fecha=fecha))
     else:
         return jsonify({'error': 'No se ha iniciado sesión'}), 401
 
@@ -93,8 +96,19 @@ def reserva():
     else:
         return redirect(url_for('login'))
 
+@app.route("/logout", methods = ["POST"])
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('login'))
+
 def pagina_no_encontrada(error):
     return redirect(url_for('login'))
+
+@app.route("/confirmacion", methods = ["GET", "POST"])
+def confirmacion():
+    usuario = request.args.get('usuario')
+    fecha = request.args.get('fecha')
+    return render_template("confirmacion.html", usuario=usuario, fecha=fecha)
 
 app.register_error_handler(404, pagina_no_encontrada)
 

@@ -59,7 +59,7 @@ diaSeleccionado.addEventListener("change", (e) => {
 
   const partesFecha = diaActual.split(' ')[1].split('/');
   fechaSeleccionada = `${partesFecha[2]}-${partesFecha[1]}-${partesFecha[0]}`; // Formato YYYY-MM-DD
-  console.log(fechaSeleccionada);
+  console.log(diaActual);
 
 asientos.forEach((asiento) => {
     asiento.classList.remove("seleccionado");
@@ -131,19 +131,16 @@ function actualizarAsientosSeleccionados() {
 
   localStorage.setItem("asientosSeleccionados", JSON.stringify(asientosIndex));
 }
-
-document.getElementById('reservar').addEventListener('click', function() {;
+document.querySelector("reservar").addEventListener("click", () => {
   const puesto = idAsientoSeleccionado; 
   const fecha_agendamiento = fechaSeleccionada;
-
-  console.log(puesto, fecha_agendamiento);
 
   if (!puesto || !fecha_agendamiento) {
     console.error('Faltan datos para la reserva');
     return;
   }
 
-  fetch('http://localhost:5000/reservations', {
+  fetch('/reservations', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -151,12 +148,17 @@ document.getElementById('reservar').addEventListener('click', function() {;
     body: JSON.stringify({
       puesto: puesto,
       fecha_agendamiento: fecha_agendamiento,
+      fecha: diaActual,
     }),
   })
-  .then(response => response.json())
-  .then(data => console.log(data))
+  .then(response => {
+    if (response.redirected) {
+      window.location.href = response.url;
+    }
+  })
   .catch((error) => {
     console.error('Error:', error);
   });
 });
+
 

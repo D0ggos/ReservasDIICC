@@ -8,6 +8,8 @@
     <title>Reserva Sala Postgrado</title>
   </head>
   <body>
+
+    <h1> Hola {{usuario}} </h1>
     <div class="dias-container">
       <label> Día:</label>
       <select id="dia">
@@ -66,7 +68,7 @@
 
       <div class="separacion"></div>
       
-      <button class="boton" id="reservar">Reservar</button>
+      <button class="boton" action="{{ url_for('confirmacion') }}" id="reservar">Reservar</button>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
