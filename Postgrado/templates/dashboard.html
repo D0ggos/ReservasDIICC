@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+    <title>Admin</title>
+  </head>
+    <body>
+      <div class="contenedor-principal_1">
+        <div class="container">
+          <h1>Reservas futuras</h1>
+
+          <div class="row">
+            <div class="asiento" id="10"></div>
+            <div class="asiento" id="9"></div>
+          </div>
+          <div class="row">
+            <div class="asiento" id="8"></div>
+            <div class="asiento" id="7"></div>
+          </div>
+    
+          <div class="separacion"></div>
+    
+          <div class="row">
+            <div class="asiento" id="6"></div>
+            <div class="asiento" id="5"></div>
+          </div>
+    
+          <div class="row">
+            <div class="asiento" id="4"></div>
+            <div class="asiento" id="3"></div>
+          </div>
+    
+          <div class="separacion"></div>
+    
+          <div class="row">
+              <div class="asiento" id="2"></div>
+              <div class="asiento" id="1"></div>
+          </div>
+        </div>
+        <div class="calendario-asientos-container" id="reservas-x-asiento"></div>
+      </div>
+      <h2>Reservas de Hoy</h2>
+      <div class="asientos-hoy-container"></div>
+      
+      <div class="contenedor-principal_2">
+        
+        <div class="form-container">
+          
+          <h2>Crear Usuario</h2>
+          <form action="{{ url_for('create_user') }}" method="post">
+            <input type="text" name="nombre" placeholder="Nombre completo">
+            <input type="text" name="usuario" placeholder="Usuario (correo udec sin @udec)">
+            <input type="password" name="contraseña" placeholder="Contraseña">
+            <input type="password" name="confirmar-contraseña" placeholder="Confirmar contraseña">
+            <input type="submit" value="Crear Usuario">
+            {% if error1 %}
+            <div class="alert">{{ error1 }}</div>
+            {% endif %}
+            {% if message1 %}
+            <div class="alert-success">{{ message1 }}</div>
+            {% endif %}
+          </form>
+        </div>
+        
+        <div class="form-container">
+
+          <h2>Cambiar contraseña</h2>
+          <form action="{{ url_for('change_password') }}" method="post">
+          <input type="text" name="usuario" placeholder="Usuario (correo udec sin @udec)">
+          <input type="password" name="contraseña" placeholder="Contraseña">
+          <input type="password" name="confirmar-contraseña" placeholder="Confirmar contraseña">
+          <input type="submit" value="Cambiar Contraseña">
+          {% if error2 %}
+          <div class="alert">{{ error2 }}</div>
+          {% endif %}
+          {% if message2 %}
+          <div class="alert-success">{{ message2 }}</div>
+          {% endif %}
+
+          </form>
+        </div>
+
+        <div class="usuarios-container">
+          <h2>Eliminar Usuario</h2>
+        </div>
+
+      </div>
+      <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    </body>
+</html>

@@ -8,69 +8,71 @@
     <title>Reserva Sala Postgrado</title>
   </head>
   <body>
-
+    
     <h1> Hola {{usuario}} </h1>
-    <div class="dias-container">
-      <label> Día:</label>
-      <select id="dia">
-        <option id="lunes">Lunes</option>
-        <option id="martes">Martes</option>
-        <option id="miercoles">Miércoles</option>
-        <option id="jueves">Jueves</option>
-        <option id="viernes">Viernes</option>
-      </select>
-    </div>
-
-    <ul class="showcase">
-      <li>
-        <div class="asiento"></div>
-        <small>Disponible</small>
-      </li>
-      <li>
-        <div class="asiento seleccionado"></div>
-        <small>Seleccionado</small>
-      </li>
-      <li>
-        <div class="asiento reservado"></div>
-        <small>Reservado</small>
-      </li>
-    </ul>
-
-    <div class="container">
-
-      <div class="row">
-        <div class="asiento" id="10"></div>
-        <div class="asiento" id="9"></div>
-      </div>
-      <div class="row">
-        <div class="asiento" id="8"></div>
-        <div class="asiento" id="7"></div>
+      <div class="dias-container">
+        <label> Día:</label>
+        <select id="dia">
+          <option id="lunes">Lunes</option>
+          <option id="martes">Martes</option>
+          <option id="miercoles">Miércoles</option>
+          <option id="jueves">Jueves</option>
+          <option id="viernes">Viernes</option>
+        </select>
       </div>
 
-      <div class="separacion"></div>
+      <ul class="showcase">
+        <li>
+          <div class="asiento"></div>
+          <small>Disponible</small>
+        </li>
+        <li>
+          <div class="asiento seleccionado"></div>
+          <small>Seleccionado</small>
+        </li>
+        <li>
+          <div class="asiento reservado"></div>
+          <small>Reservado</small>
+        </li>
+      </ul>
 
-      <div class="row">
-        <div class="asiento" id="6"></div>
-        <div class="asiento" id="5"></div>
+      <div class="container">
+
+        <div class="row">
+          <div class="asiento" id="10"></div>
+          <div class="asiento" id="9"></div>
+        </div>
+        <div class="row">
+          <div class="asiento" id="8"></div>
+          <div class="asiento" id="7"></div>
+        </div>
+
+        <div class="separacion"></div>
+
+        <div class="row">
+          <div class="asiento" id="6"></div>
+          <div class="asiento" id="5"></div>
+        </div>
+
+        <div class="row">
+          <div class="asiento" id="4"></div>
+          <div class="asiento" id="3"></div>
+        </div>
+
+        <div class="separacion"></div>
+
+        <div class="row">
+            <div class="asiento" id="2"></div>
+            <div class="asiento" id="1"></div>
+        </div>
+
+        <div class="separacion"></div>
+
+        <button class="boton" id="reservar">Reservar</button>
       </div>
-
-      <div class="row">
-        <div class="asiento" id="4"></div>
-        <div class="asiento" id="3"></div>
-      </div>
-
-      <div class="separacion"></div>
-
-      <div class="row">
-          <div class="asiento" id="2"></div>
-          <div class="asiento" id="1"></div>
-      </div>
-
-      <div class="separacion"></div>
-      
-      <button class="boton" action="{{ url_for('confirmacion') }}" id="reservar">Reservar</button>
-    </div>
-
+      <h1>Tus reservas futuras son:</h1>
+      <p>(Puedes cancelar una reserva haciendole click, formato YYYY-MM-DD)</p>
+      <div class="info"></div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
   </body>
 </html>

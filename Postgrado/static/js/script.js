@@ -2,6 +2,8 @@ const container = document.querySelector(".container");
 const asientos = document.querySelectorAll(".container .asiento");
 const diaSeleccionado = document.getElementById("dia");
 var idAsientoSeleccionado = null;
+const info = document.querySelector(".info");
+
 
 
 // Obtiene la fecha actual
@@ -42,9 +44,28 @@ asientos.forEach((asiento, index) => {
 });
 
 
+
 // Dia actual. Pasarlo a la base de datos al momento de reservar. Debe actualizarse.
 let diaActual = diaSeleccionado.value;
 let fechaSeleccionada = new Date(diaActual);
+
+const aux = lunes.textContent.split(' ')[1].split('/');
+fechaSeleccionada = `${aux[2]}-${aux[1]}-${aux[0]}`; // Formato YYYY-MM-DD
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const partesLunes = lunes.textContent.split(' ')[1].split('/');
+  const lunesDefault = `${partesLunes[2]}-${partesLunes[1]}-${partesLunes[0]}`; // Formato YYYY-MM-DD
+
+  fetch(`/reservations/${lunesDefault}`)
+    .then(response => response.json())
+    .then(reservas => {
+      reservas.forEach(puesto => {
+        let asiento = document.getElementById(`${puesto}`);
+        asiento.classList.add('reservado');
+      });
+    });
+});
 
 // Evento de cambio en la selección de día
 diaSeleccionado.addEventListener("change", (e) => {
@@ -136,7 +157,7 @@ document.querySelector("#reservar").addEventListener("click", () => {
   const fecha_agendamiento = fechaSeleccionada;
 
   if (!puesto || !fecha_agendamiento) {
-    console.error('Faltan datos para la reserva');
+    alert('Por favor selecciona un asiento y una fecha')
     return;
   }
 
@@ -152,8 +173,15 @@ document.querySelector("#reservar").addEventListener("click", () => {
     }),
   })
   .then(response => {
-    if (response.redirected) {
-      window.location.href = response.url;
+    if (response.ok) {
+      alert('Reserva realizada con éxito');
+      location.assign('/login');
+    } else {
+      return response.json().then(data => {
+        if (data.message) {
+          alert(data.message);
+        }
+      });
     }
   })
   .catch((error) => {
@@ -161,4 +189,73 @@ document.querySelector("#reservar").addEventListener("click", () => {
   });
 });
 
+
+
+let hoy = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), fechaActual.getDate());
+hoy =  hoy.toLocaleDateString();
+hoy = hoy.split('/').reverse().join('-');
+
+fetch('/reservas_usuario', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    date: hoy,
+  }),
+})
+
+.then(response => response.json())
+.then(data => {
+
+  data.forEach(reserva => {
+    let fecha = reserva[0].split(' ')[1] + ' ' + reserva[0].split(' ')[2] + ' ' + reserva[0].split(' ')[3];
+    reserva[0] = new Date(fecha);
+    reserva[0] =  reserva[0].toLocaleDateString();
+    reserva[0] = reserva[0].split('/').reverse().join('-');
+  });
+
+  data.forEach(reserva => {
+    let fechaReserva = document.createElement('p');
+    fechaReserva.className = 'boton-reservas'
+    fechaReserva.textContent = 'Puesto ' + reserva[1] + '  para el dia ' + reserva[0];
+    info.appendChild(fechaReserva);
+  });
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+
+
+
+info.addEventListener('click', (e) => {
+  if (e.target.classList.contains('boton-reservas')) {
+    let confirmacion = confirm('¿Estás seguro de que deseas cancelar esta reserva?');
+    if (confirmacion) {
+      let text = e.target.textContent;
+      let fecha = text.split('para el dia ')[1];
+      let puesto = text.split(' ')[1];
+
+      fetch('/eliminar_reserva', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: fecha,
+          puesto: puesto,
+        }),
+      })
+      .then(response => response.json())
+      .then (data => {
+            if (data.message) {
+              alert(data.message);
+              location.reload();
+            }
+          })
+      .catch((error) => {
+        console.error('Error:', error);
+      })
+    }
+  }});
 

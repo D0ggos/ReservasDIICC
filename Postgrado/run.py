@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, redirect, jsonify, request, session
 import psycopg2
+from psycopg2 import Error
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 
@@ -11,42 +12,88 @@ conexion = psycopg2.connect(
 )
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta'
+app.secret_key = "owo"
 
 usuario = None
 fecha = None
 
-# Crear usuario
-
-#def create_user(username, password):
-    #hashed_password = generate_password_hash(password)
-    #cursor = conexion.cursor()
-    #cursor.execute('INSERT INTO login (usuario, contraseña) VALUES (%s, %s)', (username, hashed_password))
-    #conexion.commit()
-
-# Crear reserva
-
-def insert_reservation(usuario, puesto, fecha_agendamiento):
-    print(usuario, puesto, fecha_agendamiento)
-    # Verifica que todos los datos necesarios estén presentes
-    if not usuario or not puesto or not fecha_agendamiento:
-        print('Faltan datos para la reserva')
-        return
-
-    # Crea la consulta SQL
-    query = 'INSERT INTO RESERVAS (usuario, puesto, fecha_agendamiento) VALUES (%s, %s, %s)'
-
-    # Ejecuta la consulta
+def crear_mauri():
     cursor = conexion.cursor()
-    cursor.execute(query, (usuario, puesto, fecha_agendamiento))
+    cursor.execute('INSERT INTO login (usuario, contraseña, nombre, tipo) VALUES (%s, %s, %s, %s)', ('mauri', generate_password_hash('1234'), 'Mauricio Echavarría', 'admin',))
     conexion.commit()
-    print('La consulta SQL se ejecutó correctamente')
+    return
 
-#insert_reservation('Pedroo', 10, '2024-04-30')
+@app.route("/create_user", methods = ["GET", "POST"])
+def create_user():
+    if request.method == 'POST':
+        user = request.form['usuario']
+        password = request.form['contraseña']
+        password2 = request.form['confirmar-contraseña']
+        name = request.form['nombre']
+
+        if password != password2:
+            return render_template('dashboard.html', error1='Las contraseñas no coinciden')
+
+        pass_encriptada = generate_password_hash(password2)
+        cursor = conexion.cursor()
+        cursor.execute('INSERT INTO login (usuario, contraseña, nombre, tipo) VALUES (%s, %s, %s, %s)', (user, pass_encriptada, name, 'Estudiante',))
+        conexion.commit()
+        return render_template('dashboard.html', message1='Usuario creado correctamente')
+    return redirect(url_for('dashboard'))
+
+
+
+@app.route("/change_password", methods = ["GET", "POST"])
+def change_password():
+    if request.method == 'POST':
+        user = request.form['usuario']
+        password = request.form['contraseña']
+        password2 = request.form['confirmar-contraseña']
+
+        if password != password2:
+            return render_template('dashboard.html', error2='Las contraseñas no coinciden')
+        
+        cursor = conexion.cursor()
+        cursor.execute('SELECT nombre FROM login WHERE usuario = %s', (user,))
+        if cursor.fetchone() is None:
+            return render_template('dashboard.html', error2='El usuario no existe')
+
+        pass_encriptada = generate_password_hash(password2)
+        cursor.execute('UPDATE login SET contraseña = %s WHERE usuario = %s', (pass_encriptada, user,))
+        conexion.commit()
+        return render_template('dashboard.html', message2='Contraseña cambiada correctamente')
+    return redirect(url_for('dashboard'))
+
+
+
+@app.route("/usuarios", methods = ["GET", "POST"])
+def usuarios():
+    cursor = conexion.cursor()
+    cursor.execute('SELECT usuario FROM login')
+    usuarios = [row[0] for row in cursor.fetchall()]
+    return jsonify(usuarios)
+
+
+
+@app.route("/eliminar_usuario", methods = ["GET", "POST"])
+def eliminar_usuario():
+    if request.method == 'POST':
+        data = request.get_json()
+        usuario = data.get('usuario')
+        print(usuario)
+        cursor = conexion.cursor()
+        cursor.execute('DELETE FROM login WHERE usuario = %s', (usuario,))
+        conexion.commit()
+        return jsonify({'message': 'Usuario eliminado correctamente'})
+
+    return redirect(url_for('dashboard'))
+
+
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
     error = None
+    session.pop('username', None)
     if request.method == 'POST':
         username = request.form['username']
         usuario = username
@@ -57,12 +104,81 @@ def login():
         hashed_password = cursor.fetchone()
         
         if hashed_password is None or not check_password_hash(hashed_password[0], password):
-            error = 'Invalid username or password'
+            error = 'Nombre de usuario o contraseña incorrectos'
+            return render_template('login.html', error=error)
         else:
             session['username'] = username
             return redirect(url_for('reserva'))
         
     return render_template("login.html", error=error)
+
+
+
+@app.route("/admin", methods = ["GET", "POST"])
+def admin():
+    error = None
+    session.pop('username', None)
+    if request.method == 'POST':
+        username = request.form['username']
+        usuario = username
+        password = request.form['password']
+        
+        cursor = conexion.cursor()
+        cursor.execute('SELECT contraseña FROM login WHERE usuario = %s AND tipo = %s', (username, 'admin'))
+        hashed_password = cursor.fetchone()
+        
+        if hashed_password is None or not check_password_hash(hashed_password[0], password):
+            error = 'Nombre de usuario o contraseña incorrectos'
+            return render_template('admin.html', error=error)
+        else:
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+    return render_template("admin.html")
+
+
+
+@app.route("/dashboard", methods = ["GET", "POST"])
+def dashboard():
+    if request.referrer is None:
+        return redirect(url_for('admin'))
+    return render_template("dashboard.html")
+
+@app.route("/calendario-asientos", methods = ["GET", "POST"])
+def calendario_asientos():
+    cursor = conexion.cursor()
+    data = request.get_json()
+    asiento = data.get('asiento')
+    date = data.get('date')
+    # seleccionar todas las fechas siguientes que tiene agendado el asiento
+    try:
+        cursor.execute('SELECT fecha_agendamiento, nombre FROM reservas WHERE puesto = %s AND fecha_agendamiento > %s', (asiento, date))
+        fechas_siguientes = [(row[0], row[1]) for row in cursor.fetchall()]
+    except Error as e:
+        conexion.rollback()
+        fechas_siguientes = []
+    finally:
+        cursor.close()
+    return jsonify(fechas_siguientes)
+
+
+
+@app.route("/asientos_hoy", methods = ["GET", "POST"])
+def asientos_hoy():
+    cursor = conexion.cursor()
+    data = request.get_json()
+    date = data.get('date')
+    # seleccionar todas las fechas siguientes que tiene agendado el asiento
+    try:
+        cursor.execute('SELECT nombre, puesto FROM reservas WHERE fecha_agendamiento = %s', (date,))
+        puestos_hoy = [(row[0], row[1]) for row in cursor.fetchall()]
+    except Error as e:
+        conexion.rollback()
+        puestos_hoy = []
+    finally:
+        cursor.close()
+    return jsonify(puestos_hoy)
+
+
 
 @app.route('/reservations/<date>', methods=['GET'])
 def get_reservations(date):
@@ -71,44 +187,104 @@ def get_reservations(date):
     reservations = [row[0] for row in cursor.fetchall()]
     return jsonify(reservations)
 
+
+
 @app.route('/reservations', methods=['POST'])
 def reservations():
 
     if 'username' in session:
         usuario = session['username']
-        print(usuario)
         data = request.get_json()
-        print(data)
         puesto = data.get('puesto')
         fecha_agendamiento = data.get('fecha_agendamiento')
         fecha = data.get('fecha')
-        insert_reservation(usuario, puesto, fecha_agendamiento)
-        return redirect(url_for('confirmacion', usuario=usuario, fecha=fecha))
-    else:
-        return jsonify({'error': 'No se ha iniciado sesión'}), 401
+        print(fecha)
+
+        cursor = conexion.cursor()
+        # Verifica si el usuario ya tiene una reserva para el día seleccionado
+        cursor.execute('SELECT COUNT(*) FROM RESERVAS WHERE usuario = %s AND fecha_agendamiento = %s', (usuario, fecha_agendamiento))
+        reservas_usuario = cursor.fetchone()[0]
+
+        if reservas_usuario > 0:
+            return jsonify({'message': 'Ya tienes una reserva para este día'}), 409
+
+        else:
+        # Crea la consulta SQL
+            cursor.execute('SELECT nombre FROM login WHERE usuario = %s', (usuario,))
+            nombre = cursor.fetchone()
+            query = 'INSERT INTO RESERVAS (usuario, puesto, fecha_agendamiento, nombre) VALUES (%s, %s, %s, %s)'
+
+            # Ejecuta la consulta
+            cursor.execute(query, (usuario, puesto, fecha_agendamiento, nombre,))
+            conexion.commit()
+            print('La consulta SQL se ejecutó correctamente')
+            return jsonify({'message': 'Reserva realizada correctamente'})
+
 
 
 @app.route("/reserva")
 def reserva():
+    if request.referrer is None:
+        return redirect(url_for('login'))
     if 'username' in session:
         return render_template("reserva.html", usuario=session['username'])
 
     else:
         return redirect(url_for('login'))
 
-@app.route("/logout", methods = ["POST"])
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+
 
 def pagina_no_encontrada(error):
     return redirect(url_for('login'))
 
-@app.route("/confirmacion", methods = ["GET", "POST"])
-def confirmacion():
-    usuario = request.args.get('usuario')
-    fecha = request.args.get('fecha')
-    return render_template("confirmacion.html", usuario=usuario, fecha=fecha)
+
+
+@app.route("/reservas_usuario", methods = ["GET", "POST"])
+def reservas_usuario():
+    cursor = conexion.cursor()
+    data = request.get_json()
+    usuario = session['username']
+    date = data.get('date')
+    cursor.execute('SELECT fecha_agendamiento, puesto FROM reservas WHERE usuario = %s AND fecha_agendamiento > %s', (usuario, date,))
+    reservas = [(row[0], row[1]) for row in cursor.fetchall()]
+    conexion.commit()
+    return jsonify(reservas)
+
+
+
+@app.route("/eliminar_reserva", methods = ["GET", "POST"])
+def eliminar_reserva():
+    if request.method == 'POST':
+        data = request.get_json()
+        usuario = session['username']
+        puesto = data.get('puesto')
+        fecha = data.get('date')
+        cursor = conexion.cursor()
+        cursor.execute('DELETE FROM reservas WHERE usuario = %s AND puesto = %s AND fecha_agendamiento = %s', (usuario, puesto, fecha,))
+        conexion.commit()
+        return jsonify({'message': 'Reserva eliminada correctamente'})
+
+    return redirect(url_for('reserva'))
+
+
+@app.route("/eliminar_reserva_admin", methods = ["GET", "POST"])
+def eliminar_reserva_admin():
+    if request.method == 'POST':
+        data = request.get_json()
+        nombre = data.get('nombre')
+        fecha = data.get('date')
+        puesto = data.get('puesto')
+        cursor = conexion.cursor()
+        print(nombre)
+        print(fecha)
+        print(puesto)
+        cursor.execute('DELETE FROM reservas WHERE nombre = %s AND puesto = %s AND fecha_agendamiento = %s', (nombre, puesto, fecha,))
+        conexion.commit()
+        return jsonify({'message': 'Reserva eliminada correctamente'})
+
+    return redirect(url_for('reserva'))
+
+
 
 app.register_error_handler(404, pagina_no_encontrada)
 
