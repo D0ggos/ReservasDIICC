@@ -24,9 +24,10 @@ body {
   flex-direction: row;
 }
 
+
 .contenedor-principal_1 {
   display: flex;
-  justify-content: space-around;
+  justify-content: first baseline;
   width: 60%;
   margin-bottom: 40px;
 }
@@ -53,10 +54,18 @@ body {
   margin: 8px;
 }
 
+#reservas-x-asiento {
+  max-height: 280px;
+  overflow-y: auto;
+  background-color: rgba(0, 51, 102, 0.8); /* Añade esta línea */
+  border-radius: 10px;
+}
+
 .calendario-asientos-container{
   display: flex;
   flex-direction: column;
   margin-top: 100px;
+  margin-left: 170px;
 }
 
 input {
@@ -166,7 +175,7 @@ p {
 }
 
 .boton-reservas {
-  background-color: rgba(216, 180, 70, 0.7);
+  background-color: rgba(216, 180, 70, 0.9);
   color: #003366;
   border: none;
   border-radius: 5px;

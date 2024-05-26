@@ -69,12 +69,12 @@ container.addEventListener("click", (e) => {
           reserva[0] =  reserva[0].toLocaleDateString();
           reserva[0] = reserva[0].split('/').reverse().join('-');
         });
-
+        let contenedorReservas = document.getElementById('reservas-x-asiento');
         data.forEach(reserva => {
           let fechaReserva = document.createElement('p');
           fechaReserva.className = "boton-reservas";
-          fechaReserva.textContent = reserva[1] + '  -  ' + reserva[0];
-          info.appendChild(fechaReserva);
+          fechaReserva.textContent = reserva[1] + '  -  ' + reserva[0] + ' en la ' + reserva[2];
+          contenedorReservas.appendChild(fechaReserva);
         });
       })
       .catch(error => {
@@ -96,6 +96,8 @@ calendario.addEventListener('click', (e) => {
       let nombre = text.split('-')[0];
       nombre = nombre.split(' ')[0] + ' ' + nombre.split(' ')[1] + ' ' + nombre.split(' ')[2] + ' ' + nombre.split(' ')[3];
       
+      let horario = text.split(' ')[10];
+      console.log(horario);
       idAsientoSeleccionado = asientoSeleccionado.classList.contains("seleccionado") ? asientoSeleccionado.id : null;
 
       fetch('/eliminar_reserva_admin', {
@@ -106,6 +108,7 @@ calendario.addEventListener('click', (e) => {
         body: JSON.stringify({
           date: fecha,
           nombre: nombre,
+          horario: horario,
           puesto: idAsientoSeleccionado
         }),
       })

@@ -151,8 +151,8 @@ def calendario_asientos():
     date = data.get('date')
     # seleccionar todas las fechas siguientes que tiene agendado el asiento
     try:
-        cursor.execute('SELECT fecha_agendamiento, nombre FROM reservas WHERE puesto = %s AND fecha_agendamiento > %s', (asiento, date))
-        fechas_siguientes = [(row[0], row[1]) for row in cursor.fetchall()]
+        cursor.execute('SELECT fecha_agendamiento, nombre, horario FROM reservas WHERE puesto = %s AND fecha_agendamiento > %s', (asiento, date))
+        fechas_siguientes = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
     except Error as e:
         conexion.rollback()
         fechas_siguientes = []
@@ -180,10 +180,12 @@ def asientos_hoy():
 
 
 
-@app.route('/reservations/<date>', methods=['GET'])
+@app.route('/reservations/<date>', methods=["GET", "POST"])
 def get_reservations(date):
+    data = request.get_json()
+    horario = data.get('horario')
     cursor = conexion.cursor()
-    cursor.execute('SELECT puesto FROM reservas WHERE fecha_agendamiento = %s', (date,))
+    cursor.execute('SELECT puesto FROM reservas WHERE fecha_agendamiento = %s AND horario = %s', (date, horario,))
     reservations = [row[0] for row in cursor.fetchall()]
     return jsonify(reservations)
 
@@ -198,24 +200,24 @@ def reservations():
         puesto = data.get('puesto')
         fecha_agendamiento = data.get('fecha_agendamiento')
         fecha = data.get('fecha')
-        print(fecha)
+        horario = data.get('horario')
 
         cursor = conexion.cursor()
         # Verifica si el usuario ya tiene una reserva para el día seleccionado
-        cursor.execute('SELECT COUNT(*) FROM RESERVAS WHERE usuario = %s AND fecha_agendamiento = %s', (usuario, fecha_agendamiento))
+        cursor.execute('SELECT COUNT(*) FROM RESERVAS WHERE usuario = %s AND fecha_agendamiento = %s AND horario = %s', (usuario, fecha_agendamiento, horario))
         reservas_usuario = cursor.fetchone()[0]
 
         if reservas_usuario > 0:
-            return jsonify({'message': 'Ya tienes una reserva para este día'}), 409
+            return jsonify({'message': 'Ya tienes una reserva para este día en este horario'}), 409
 
         else:
         # Crea la consulta SQL
             cursor.execute('SELECT nombre FROM login WHERE usuario = %s', (usuario,))
             nombre = cursor.fetchone()
-            query = 'INSERT INTO RESERVAS (usuario, puesto, fecha_agendamiento, nombre) VALUES (%s, %s, %s, %s)'
+            query = 'INSERT INTO RESERVAS (usuario, puesto, fecha_agendamiento, nombre, horario) VALUES (%s, %s, %s, %s, %s)'
 
             # Ejecuta la consulta
-            cursor.execute(query, (usuario, puesto, fecha_agendamiento, nombre,))
+            cursor.execute(query, (usuario, puesto, fecha_agendamiento, nombre, horario,))
             conexion.commit()
             print('La consulta SQL se ejecutó correctamente')
             return jsonify({'message': 'Reserva realizada correctamente'})
@@ -245,8 +247,8 @@ def reservas_usuario():
     data = request.get_json()
     usuario = session['username']
     date = data.get('date')
-    cursor.execute('SELECT fecha_agendamiento, puesto FROM reservas WHERE usuario = %s AND fecha_agendamiento > %s', (usuario, date,))
-    reservas = [(row[0], row[1]) for row in cursor.fetchall()]
+    cursor.execute('SELECT fecha_agendamiento, puesto, horario FROM reservas WHERE usuario = %s AND fecha_agendamiento > %s', (usuario, date,))
+    reservas = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
     conexion.commit()
     return jsonify(reservas)
 
@@ -259,8 +261,9 @@ def eliminar_reserva():
         usuario = session['username']
         puesto = data.get('puesto')
         fecha = data.get('date')
+        horario = data.get('horario')
         cursor = conexion.cursor()
-        cursor.execute('DELETE FROM reservas WHERE usuario = %s AND puesto = %s AND fecha_agendamiento = %s', (usuario, puesto, fecha,))
+        cursor.execute('DELETE FROM reservas WHERE usuario = %s AND puesto = %s AND fecha_agendamiento = %s AND horario = %s', (usuario, puesto, fecha, horario,))
         conexion.commit()
         return jsonify({'message': 'Reserva eliminada correctamente'})
 
@@ -274,11 +277,12 @@ def eliminar_reserva_admin():
         nombre = data.get('nombre')
         fecha = data.get('date')
         puesto = data.get('puesto')
+        horario = data.get('horario')
         cursor = conexion.cursor()
         print(nombre)
         print(fecha)
         print(puesto)
-        cursor.execute('DELETE FROM reservas WHERE nombre = %s AND puesto = %s AND fecha_agendamiento = %s', (nombre, puesto, fecha,))
+        cursor.execute('DELETE FROM reservas WHERE nombre = %s AND puesto = %s AND fecha_agendamiento = %s AND horario = %s', (nombre, puesto, fecha, horario,))
         conexion.commit()
         return jsonify({'message': 'Reserva eliminada correctamente'})
 

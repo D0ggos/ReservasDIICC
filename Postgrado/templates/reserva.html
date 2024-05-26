@@ -13,11 +13,11 @@
       <div class="dias-container">
         <label> Día:</label>
         <select id="dia">
-          <option id="lunes">Lunes</option>
-          <option id="martes">Martes</option>
-          <option id="miercoles">Miércoles</option>
-          <option id="jueves">Jueves</option>
-          <option id="viernes">Viernes</option>
+        </select>
+      </div>
+      <div class="dias-container">
+        <label> Horario:</label>
+        <select id="horario">
         </select>
       </div>
 
@@ -72,7 +72,7 @@
       </div>
       <h1>Tus reservas futuras son:</h1>
       <p>(Puedes cancelar una reserva haciendole click, formato YYYY-MM-DD)</p>
-      <div class="info"></div>
+      <div class="info" id="cancelacion"></div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
   </body>
 </html>

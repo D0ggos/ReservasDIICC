@@ -39,6 +39,10 @@ body {
   appearance: none;
 }
 
+.dias-container {
+  margin-bottom: 10px;
+}
+
 .container {
   perspective: 1000px;
   margin-bottom: 30px;
@@ -146,7 +150,6 @@ p.text span{
 
 .info{
   height: 320px;
-
 }
 
 .boton-reservas {
@@ -158,4 +161,15 @@ p.text span{
   cursor: pointer;
   font-size: 16px;
   margin-top: 20px;
+  margin-left: 21px;
+  max-width: 400px;
+}
+
+#cancelacion{
+  overflow-y: auto;
+  max-height: 320px;
+  margin-bottom: 60px;
+  border-radius: 10px;
+  width: 450px;
+  background-color: rgba(0, 51, 102, 0.8); /* Añade esta línea */
 }
