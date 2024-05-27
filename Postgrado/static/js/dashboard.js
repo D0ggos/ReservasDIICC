@@ -1,9 +1,67 @@
 const container = document.querySelector(".container");
+const contenedor2 = document.querySelector(".contenedor-principal_2");
 const asientos = document.querySelectorAll(".container .asiento");
 const info = document.querySelector("#reservas-x-asiento");
 const usuarios_container = document.querySelector(".usuarios-container");
 const calendario = document.querySelector(".calendario-asientos-container")
+const vitaliciosContainer = document.querySelector('.vitalicios-container');
 let asientoSeleccionado = null;
+let puestosVitalicios = null;
+
+
+
+fetch('/puestos_vitalicios', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+})
+.then(response => response.json())
+.then(data => {
+  puestosVitalicios = data;
+  console.log(puestosVitalicios);
+  for (let i = 0; i < data.length; i++) {
+
+    let vitalicioElement = document.createElement('div');
+    vitalicioElement.className = 'eliminar_vitalicio_button';
+    vitalicioElement.textContent = 'Puesto ' + data[i][0] + ' de ' + data[i][1];
+    vitaliciosContainer.appendChild(vitalicioElement);
+  }
+})
+.catch(error => {
+  console.error('Error:', error);
+});
+
+
+vitaliciosContainer.addEventListener("click", (e) => {
+  if (e.target.classList.contains('eliminar_vitalicio_button')) {
+    const confirmacion = confirm('¿Seguro que quieres eliminar este puesto vitalicio?');
+    if (confirmacion) {
+      const puestoSeleccionado = e.target;
+      const puesto = puestoSeleccionado.textContent.split(' ')[1];
+      fetch('/eliminar_vitalicio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          puesto: puesto,
+        }),
+      })
+        .then(response =>  {
+        if (response.ok) {
+          alert('Puesto vitalicio eliminado correctamente');
+          location.reload();
+        }
+      })
+        .catch(error => {
+          alert('Error al eliminar el puesto vitalicio');
+        });
+    }
+  }
+});
+
 
 // Obtiene la fecha actual
 let fechaActual = new Date();
@@ -12,41 +70,31 @@ let diaActual = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), fech
 diaActual =  diaActual.toLocaleDateString();
 diaActual = diaActual.split('/').reverse().join('-');
 
-// Itera sobre cada asiento
+
 asientos.forEach((asiento, index) => {
-  // Crea un elemento span para contener el número del asiento
   let numeroAsiento = document.createElement('span');
   numeroAsiento.className = 'numero-asiento';
 
-  // Asigna el número del asiento (index + 1 porque los arrays empiezan en 0)
   numeroAsiento.textContent = asientos.length - index;
-
-  // Añade el número del asiento al asiento
   asiento.appendChild(numeroAsiento);
 });
 
 
-// Evento de clic en el asiento
+
 container.addEventListener("click", (e) => {
 
     while (info.firstChild) {
       info.removeChild(info.firstChild);
     }
     asientoSeleccionado = e.target;
-    // Verifica si el asiento ya está seleccionado
     const isSelected = asientoSeleccionado.classList.contains("seleccionado");
-    // Obtiene todos los asientos seleccionados
     const asientosSeleccionados = document.querySelectorAll(".row .asiento.seleccionado");
-    // Si el asiento no está seleccionado y ya hay un asiento seleccionado
     if (!isSelected && asientosSeleccionados.length > 0) {
-      // Desmarca todos los asientos seleccionados
       asientosSeleccionados.forEach((asiento) => {
         asiento.classList.remove("seleccionado");
       });
     }
-    // Marca o desmarca el asiento seleccionado
     asientoSeleccionado.classList.toggle("seleccionado");
-    // Si el asiento está seleccionado, asigna su id a idAsientoSeleccionado, de lo contrario, asigna null
     idAsientoSeleccionado = asientoSeleccionado.classList.contains("seleccionado") ? asientoSeleccionado.id : null;
 
     fetch('/calendario-asientos', {
@@ -139,23 +187,23 @@ fetch('/asientos_hoy', {
 
 .then(response => response.json())
 .then(data => {
-  let hoy = document.querySelector('.asientos-hoy-container'); // Asegúrate de seleccionar el contenedor correcto
+  let hoy = document.querySelector('.asientos-hoy-container');
 
   for (let i = 0; i < data.length; i += 2) {
     let pairContainer = document.createElement('div');
     pairContainer.className = 'pair-container';
 
     let reserva1 = document.createElement('p');
-    reserva1.textContent = data[i][0] + '  puesto ' + data[i][1];
+    reserva1.textContent = data[i][0] + '  puesto ' + data[i][1] + ' en la ' + data[i][2];
     pairContainer.appendChild(reserva1);
 
     if (data[i + 1]) {
       let reserva2 = document.createElement('p');
-      reserva2.textContent = data[i + 1][0] + ' puesto ' + data[i + 1][1];
+      reserva2.textContent = data[i + 1][0] + ' puesto ' + data[i + 1][1] + ' en la ' + data[i + 1][2];
       pairContainer.appendChild(reserva2);
     }
 
-    hoy.appendChild(pairContainer); // Agrega el contenedor al elemento 'hoy'
+    hoy.appendChild(pairContainer);
   }
 })
 .catch(error => {
@@ -171,7 +219,7 @@ fetch('/usuarios', {
 })
 .then(response => response.json())
 .then(data => {
-  let usuariosContainer = document.querySelector('.usuarios-container'); // Asegúrate de  el contenedor correcto
+  let usuariosContainer = document.querySelector('.usuarios-container');
 
   for (let i = 0; i < data.length; i += 6) {
     let column = document.createElement('div');
@@ -218,26 +266,3 @@ usuarios_container.addEventListener("click", (e) => {
   }
 });
 
-
-// Función para eliminar una reserva
-function eliminarReserva(idReserva) {
-  fetch('/eliminar-reserva', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      id: idReserva,
-    }),
-  })
-    .then(response => response.json())
-    .then(data => {
-      // Realizar acciones después de eliminar la reserva
-      console.log('Reserva eliminada:', data);
-    })
-    .catch(error => {
-      console.error('Error al eliminar la reserva:', error);
-    });
-}
-
-// Ejemplo de uso: eliminar la reserva con ID 123

@@ -53,8 +53,8 @@ body {
   justify-content: center;
   align-items: center;
   background-color: #444451;
-  height: 26px;
-  width: 32px;
+  height: 33px;
+  width: 37px;
   margin: 3px;
   font-size: 50px;
   border-top-left-radius: 10px;
@@ -140,7 +140,7 @@ p.text span{
 
 .boton{
   margin-top: 10px;
-  margin-left: auto;
+  margin-left: 10px;
   width: 100px;
   height: 20px;
   font-size: medium;
@@ -149,7 +149,7 @@ p.text span{
 }
 
 .info{
-  height: 320px;
+  height: auto;
 }
 
 .boton-reservas {
@@ -165,11 +165,12 @@ p.text span{
   max-width: 400px;
 }
 
+
 #cancelacion{
   overflow-y: auto;
   max-height: 320px;
   margin-bottom: 60px;
   border-radius: 10px;
   width: 450px;
-  background-color: rgba(0, 51, 102, 0.8); /* Añade esta línea */
+  background-color: rgba(0, 51, 102, 0.5);
 }

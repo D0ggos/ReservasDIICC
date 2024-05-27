@@ -24,6 +24,13 @@ body {
   flex-direction: row;
 }
 
+.vitalicios-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  max-height: 300px;
+}
 
 .contenedor-principal_1 {
   display: flex;
@@ -41,7 +48,7 @@ body {
   justify-content: space-around;
   width: 100%;
   margin-top: 40px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .form-container {
@@ -157,6 +164,15 @@ p {
   margin-bottom: 10px;
 }
 
+.eliminar_vitalicio_button {
+  background-color: rgba(0, 51, 102, 0.5); /* Añade esta línea */
+  border-radius: 10px;
+  padding: 9px;
+  font-size: medium;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
 .usuarios-container {
   text-align: center;
   flex-direction: column;
@@ -167,11 +183,13 @@ p {
 .alert{
   color: red;
   text-align: center;
+  font-size: small;
 }
 
 .alert-success{
   color: rgb(7, 174, 7);
   text-align: center;
+  font-size: small;
 }
 
 .boton-reservas {

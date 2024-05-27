@@ -14,7 +14,6 @@ conexion = psycopg2.connect(
 app = Flask(__name__)
 app.secret_key = "owo"
 
-usuario = None
 fecha = None
 
 def crear_mauri():
@@ -36,6 +35,12 @@ def create_user():
 
         pass_encriptada = generate_password_hash(password2)
         cursor = conexion.cursor()
+        cursor.execute('SELECT usuario FROM login WHERE usuario = %s', (user,))
+        if cursor.fetchone() is not None:
+            return render_template('dashboard.html', error1='El usuario ya existe')
+        elif name == '':
+            return render_template('dashboard.html', error1='Ingresa un nombre válido')
+        
         cursor.execute('INSERT INTO login (usuario, contraseña, nombre, tipo) VALUES (%s, %s, %s, %s)', (user, pass_encriptada, name, 'Estudiante',))
         conexion.commit()
         return render_template('dashboard.html', message1='Usuario creado correctamente')
@@ -161,16 +166,61 @@ def calendario_asientos():
     return jsonify(fechas_siguientes)
 
 
+@app.route("/puestos_vitalicios", methods = ["GET", "POST"])
+def puestos_vitalicios():
+    if request.referrer is None:
+        return redirect(url_for('admin'))
+    if request.method == 'GET':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            cursor = conexion.cursor()
+            cursor.execute('SELECT puesto, nombre FROM reservas WHERE horario = %s', ('Vitalicio',))
+            puestos_vitalicios = [(row[0], row[1]) for row in cursor.fetchall()]
+            return jsonify(puestos_vitalicios)
+        else:
+            return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        puestos = ['1','2','3','4','5','6','7','8','9','10']
+        usuario = request.form['usuario']
+        puesto = request.form['puesto']
+        if puesto not in puestos:
+            return render_template('dashboard.html', error3='Selecciona un puesto válido')
+
+        cursor = conexion.cursor()
+        cursor.execute('SELECT nombre FROM login WHERE usuario = %s', (usuario,))
+        nombre = cursor.fetchone()
+        if nombre is None:
+            return render_template('dashboard.html', error3='El usuario no existe')
+        nombre = nombre[0]
+
+        cursor.execute('SELECT COUNT(*) FROM reservas WHERE puesto = %s AND horario = %s', (puesto, 'Vitalicio',))
+        if cursor.fetchone()[0] > 0:
+            return render_template('dashboard.html', error3='El puesto ya está ocupado')
+        
+        cursor.execute('INSERT INTO reservas (usuario, puesto, nombre, horario) VALUES (%s, %s, %s, %s)', (usuario, puesto, nombre, 'Vitalicio',))
+        conexion.commit()
+        return render_template('dashboard.html', message3='Puesto vitalicio asignado correctamente')
+
+
+@app.route("/eliminar_vitalicio", methods = ["POST"])
+def eliminar_vitalicio():
+    data = request.get_json()
+    puesto = data.get('puesto')
+    cursor = conexion.cursor()
+    cursor.execute('DELETE FROM reservas WHERE puesto = %s AND horario = %s', (puesto, 'Vitalicio',))
+    conexion.commit()
+    return jsonify({'message': 'Puesto vitalicio eliminado correctamente'})
+
+
 
 @app.route("/asientos_hoy", methods = ["GET", "POST"])
 def asientos_hoy():
     cursor = conexion.cursor()
     data = request.get_json()
     date = data.get('date')
-    # seleccionar todas las fechas siguientes que tiene agendado el asiento
     try:
-        cursor.execute('SELECT nombre, puesto FROM reservas WHERE fecha_agendamiento = %s', (date,))
-        puestos_hoy = [(row[0], row[1]) for row in cursor.fetchall()]
+        cursor.execute('SELECT nombre, puesto, horario FROM reservas WHERE fecha_agendamiento = %s', (date,))
+        puestos_hoy = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
     except Error as e:
         conexion.rollback()
         puestos_hoy = []
@@ -185,7 +235,7 @@ def get_reservations(date):
     data = request.get_json()
     horario = data.get('horario')
     cursor = conexion.cursor()
-    cursor.execute('SELECT puesto FROM reservas WHERE fecha_agendamiento = %s AND horario = %s', (date, horario,))
+    cursor.execute('SELECT puesto FROM reservas WHERE (fecha_agendamiento = %s AND horario = %s) OR horario = %s', (date, horario, 'Vitalicio',))
     reservations = [row[0] for row in cursor.fetchall()]
     return jsonify(reservations)
 
@@ -193,8 +243,9 @@ def get_reservations(date):
 
 @app.route('/reservations', methods=['POST'])
 def reservations():
-
+    
     if 'username' in session:
+        print(session['username'])
         usuario = session['username']
         data = request.get_json()
         puesto = data.get('puesto')

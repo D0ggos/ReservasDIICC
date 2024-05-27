@@ -86,7 +86,29 @@
         <div class="usuarios-container">
           <h2>Eliminar Usuario</h2>
         </div>
+      </div>
 
+      <div class="contenedor-principal_2">
+
+        <div class="vitalicios-container">
+          <h2>Usuarios Vitalicios</h2>
+        </div>
+
+        <div class="form-container">
+          <h2>Crear Puesto Vitalicio</h2>
+          <form action="{{ url_for('puestos_vitalicios') }}" method="post">
+            <input type="text" name="usuario" placeholder="Nombre de usuario">
+            <input type="text" name="puesto" placeholder="Puesto">
+            <input type="submit" value="Crear">
+            {% if error3 %}
+            <div class="alert">{{ error3 }}</div>
+            {% endif %}
+            {% if message3 %}
+            <div class="alert-success">{{ message3 }}</div>
+            {% endif %}
+          </form>
+        </div>
+        
       </div>
       <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     </body>

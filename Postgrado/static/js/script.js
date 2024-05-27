@@ -7,6 +7,7 @@ const info = document.querySelector(".info");
 var cond = false;
 let hoy1 = null;
 
+
 // Obtiene la fecha actual
 let fechaActual = new Date();
 
@@ -62,16 +63,11 @@ selectHorario.appendChild(horario_mañana);
 selectHorario.appendChild(horario_tarde);
 
 
-// Itera sobre cada asiento
 asientos.forEach((asiento, index) => {
-  // Crea un elemento span para contener el número del asiento
   let numeroAsiento = document.createElement('span');
   numeroAsiento.className = 'numero-asiento';
 
-  // Asigna el número del asiento (index + 1 porque los arrays empiezan en 0)
   numeroAsiento.textContent = asientos.length - index;
-
-  // Añade el número del asiento al asiento
   asiento.appendChild(numeroAsiento);
 });
 
@@ -107,7 +103,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Evento de cambio en la selección de día
+
+
 diaSeleccionado.addEventListener("change", (e) => {
 
   const asientosSeleccionados = document.querySelectorAll(".row .asiento.reservado");
@@ -148,7 +145,7 @@ asientos.forEach((asiento) => {
 
 
 
-// Evento de cambio en la selección de horario
+
 horarioSeleccionado.addEventListener("change", (e) => {
 
   const asientosSeleccionados = document.querySelectorAll(".row .asiento.reservado");
@@ -189,34 +186,21 @@ asientos.forEach((asiento) => {
 // Evento de clic en el asiento
 container.addEventListener("click", (e) => {
 
-  // Verifica si el elemento clickeado es un asiento y no está reservado
   if (e.target.classList.contains("asiento") && !e.target.classList.contains("reservado")) {
     
     const asientoSeleccionado = e.target;
-
-    // Verifica si el asiento ya está seleccionado
     const isSelected = asientoSeleccionado.classList.contains("seleccionado");
-    
-
-    // Obtiene todos los asientos seleccionados
     const asientosSeleccionados = document.querySelectorAll(".row .asiento.seleccionado");
 
-    // Si el asiento no está seleccionado y ya hay un asiento seleccionado
     if (!isSelected && asientosSeleccionados.length > 0) {
-      // Desmarca todos los asientos seleccionados
       asientosSeleccionados.forEach((asiento) => {
-        asiento.classList.remove("seleccionado");
+      asiento.classList.remove("seleccionado");
       });
     }
-
-    // Marca o desmarca el asiento seleccionado
     asientoSeleccionado.classList.toggle("seleccionado");
-
-    // Si el asiento está seleccionado, asigna su id a idAsientoSeleccionado, de lo contrario, asigna null
     idAsientoSeleccionado = asientoSeleccionado.classList.contains("seleccionado") ? asientoSeleccionado.id : null;
     console.log(idAsientoSeleccionado);
 
-    // Actualiza la lista de asientos seleccionados
     actualizarAsientosSeleccionados();
   }
 });
@@ -292,20 +276,24 @@ fetch('/reservas_usuario', {
 
 .then(response => response.json())
 .then(data => {
+  if (data.length === 0) {
+    info.style.visibility = "hidden";
+  }
+  else {
+    data.forEach(reserva => {
+      let fecha = reserva[0].split(' ')[1] + ' ' + reserva[0].split(' ')[2] + ' ' + reserva[0].split(' ')[3];
+      reserva[0] = new Date(fecha);
+      reserva[0] =  reserva[0].toLocaleDateString();
+      reserva[0] = reserva[0].split('/').reverse().join('-');
+    });
 
-  data.forEach(reserva => {
-    let fecha = reserva[0].split(' ')[1] + ' ' + reserva[0].split(' ')[2] + ' ' + reserva[0].split(' ')[3];
-    reserva[0] = new Date(fecha);
-    reserva[0] =  reserva[0].toLocaleDateString();
-    reserva[0] = reserva[0].split('/').reverse().join('-');
-  });
-
-  data.forEach(reserva => {
-    let fechaReserva = document.createElement('p');
-    fechaReserva.className = 'boton-reservas'
-    fechaReserva.textContent = 'Puesto ' + reserva[1] + '  para el dia ' + reserva[0] + ' en la ' + reserva[2];
-    info.appendChild(fechaReserva);
-  });
+    data.forEach(reserva => {
+      let fechaReserva = document.createElement('p');
+      fechaReserva.className = 'boton-reservas'
+      fechaReserva.textContent = 'Puesto ' + reserva[1] + '  para el dia ' + reserva[0] + ' en la ' + reserva[2];
+      info.appendChild(fechaReserva);
+    });
+  }
 })
 .catch(error => {
   console.error('Error:', error);
