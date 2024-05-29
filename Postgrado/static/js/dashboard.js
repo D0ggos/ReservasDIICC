@@ -120,6 +120,7 @@ container.addEventListener("click", (e) => {
         let contenedorReservas = document.getElementById('reservas-x-asiento');
         data.forEach(reserva => {
           let fechaReserva = document.createElement('p');
+          fechaReserva.id = reserva[3];
           fechaReserva.className = "boton-reservas";
           fechaReserva.textContent = reserva[1] + '  -  ' + reserva[0] + ' en la ' + reserva[2];
           contenedorReservas.appendChild(fechaReserva);
@@ -136,17 +137,7 @@ calendario.addEventListener('click', (e) => {
   if (e.target.classList.contains('boton-reservas')) {
     let confirmacion = confirm('¿Estás seguro de que deseas cancelar esta reserva?');
     if (confirmacion) {
-      let text = e.target.textContent;
-
-      let fecha = text.split('-')[1] + '-' + text.split('-')[2] + '-' + text.split('-')[3];
-      fecha = fecha.split(' ')[2];
-
-      let nombre = text.split('-')[0];
-      nombre = nombre.split(' ')[0] + ' ' + nombre.split(' ')[1] + ' ' + nombre.split(' ')[2] + ' ' + nombre.split(' ')[3];
-      
-      let horario = text.split(' ')[10];
-      console.log(horario);
-      idAsientoSeleccionado = asientoSeleccionado.classList.contains("seleccionado") ? asientoSeleccionado.id : null;
+      let idReserva = e.target.id;
 
       fetch('/eliminar_reserva_admin', {
         method: 'POST',
@@ -154,10 +145,7 @@ calendario.addEventListener('click', (e) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          date: fecha,
-          nombre: nombre,
-          horario: horario,
-          puesto: idAsientoSeleccionado
+          id: idReserva,
         }),
       })
       .then(response => response.json())
@@ -235,6 +223,7 @@ fetch('/usuarios', {
     usuariosContainer.appendChild(column);
   }
 })
+
 
 
 usuarios_container.addEventListener("click", (e) => {
