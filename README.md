@@ -4,6 +4,7 @@ Sistema de reservas para puestos de trabajo. Es mi primer proyecto "FullStack" a
 Para que funcione, los siguientes paquetes deben estar en el entorno:
 
 Package            Version
+
 ------------------ --------
 
 annotated-types    0.6.0
@@ -27,6 +28,8 @@ filelock           3.13.4
 Flask              3.0.3
 
 flask-csp          0.10
+
+Flask-Login        0.6.3
 
 flask-talisman     1.1.0
 
